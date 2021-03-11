@@ -1,0 +1,759 @@
+openapi: "3.0.0"
+info:
+  title: Gitlab API
+  description: Operational Gitlba API v3
+  version: v3
+servers: 
+  - url: https://gitlab.com/
+paths:
+  /projects:
+    get:
+      summary: Returns list of available projects for the user
+      parameters:
+        - name: archived
+          in: query
+          schema:
+            type: boolean
+          description: Limit by archived status.
+        - name: id_after 
+          in: query
+          schema:    
+            type: integer
+          description: Limit results to projects with IDs greater than the specified ID.
+        - name: id_before
+          in: query
+          schema:
+            type: integer 
+          description: Limit results to projects with IDs less than the specified ID.
+        - name: last_activity_after
+          in: query
+          schema:  
+            type: string
+            format: date-time
+          description: 'Limit results to projects with last_activity after specified time. Format: ISO 8601 YYYY-MM-DDTHH:MM:SSZ'
+        - name: last_activity_before
+          in: query
+          schema:            
+            type: string
+            format: date-time
+          description: 'Limit results to projects with last_activity before specified time. Format: ISO 8601 YYYY-MM-DDTHH:MM:SSZ'
+        - name: membership
+          in: query
+          schema:
+            type: boolean
+          description: Limit by projects that the current user is a member of.
+        - name: min_access_level 
+          in: query
+          schema:          
+            type: integer
+          description: imit by current user minimal access level.
+        - name: order_by
+          in: query
+          schema:          
+            type: string
+          description: Return projects ordered by id, name, path, created_at, updated_at, or last_activity_at fields. repository_size, storage_size, packages_size or wiki_size fields are only allowed for admins. Default is created_at.
+        - name: owned
+          in: query
+          schema:          
+            type: boolean
+          description: Limit by projects explicitly owned by the current user.
+        - name: repository_checksum_failed 
+          in: query
+          schema:          
+            type: boolean
+          description: Limit projects where the repository checksum calculation has failed (Introduced in GitLab Premium 11.2).
+        - name: repository_storage
+          in: query
+          schema:            
+            type: string
+          description: Limit results to projects stored on repository_storage. (admins only)
+        - name: search_namespaces
+          in: query
+          schema:            
+            type: boolean
+          description: Include ancestor namespaces when matching search criteria. Default is false.
+        - name: search
+          in: query
+          schema:          
+            type: string
+          description: Return list of projects matching the search criteria.
+        - name: simple
+          in: query
+          schema:            
+            type: boolean
+          description: Return only limited fields for each project. This is a no-op without authentication as then only simple fields are returned.
+        - name: sort 
+          in: query
+          schema:          
+            type: string
+          description: Return projects sorted in asc or desc order. Default is desc.
+        - name: starred 
+          in: query
+          schema:          
+            type: boolean
+          description: Limit by projects starred by the current user.
+        - name: statistics
+          in: query
+          schema:          
+            type: boolean
+          description: Include project statistics.
+        - name: visibility
+          in: query
+          schema:          
+            type: string
+          description: Limit by visibility public, internal, or private.
+        - name: wiki_checksum_failed 
+          in: query
+          schema:          
+            type: boolean
+          description: Limit projects where the wiki checksum calculation has failed (Introduced in GitLab Premium 11.2).
+        - name: with_custom_attributes
+          in: query
+          schema:          
+            type: boolean
+          description: Include custom attributes in response. (admins only)
+        - name: with_issues_enabled
+          in: query
+          schema:          
+            type: boolean
+          description: Limit by enabled issues feature.
+        - name: with_merge_requests_enabled
+          in: query
+          schema:          
+            type: boolean
+          description: Limit by enabled merge requests feature.
+        - name: with_programming_language
+          in: query
+          schema:          
+            type: string
+          description: Limit by projects which use the given programming language.      
+      responses: 
+        '200': 
+          description: Array of Gitlab propjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GitLabProject'
+        '429':
+          $ref: '#/components/responses/RequestLimitError'
+
+  /projects/{id}/merge_requests:
+    get:
+      tags: 
+        - 'Merge Requests'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: 
+            type: string
+        - name: iids
+          schema: 
+            type: array
+            items:
+              type: integer 
+          description: Return the request having the given iid.
+          in: query
+        - name: state
+          schema: 
+              type:
+                  string
+          in: query
+          description: Return all merge requests or just those that are opened, closed, locked, or merged.
+        - name: order_by
+          schema: 
+              type: string
+          in: query
+          description: Return requests ordered by created_at or updated_at fields. Default is created_at.
+        - name: sort
+          schema:
+              type: string
+          in: query
+          description: Return requests sorted in asc or desc order. Default is desc.
+        - name: milestone
+          schema:
+            type: string
+          in: query
+          description: Return merge requests for a specific milestone. None returns merge requests with no milestone. Any returns merge requests that have an assigned milestone.
+        - name: view
+          schema:
+            type: string
+          in: query
+          description: If simple, returns the iid, URL, title, description, and basic state of merge request.
+        - name: labels
+          schema: 
+            type: string
+          in: query
+          description: 'Return merge requests matching a comma separated list of labels. None lists all merge requests with no labels. Any lists all merge requests with at least one label. No+Label (Deprecated) lists all merge requests with no labels. Predefined names are case-insensitive.'
+        - name: with_labels_details
+          schema: 
+            type: boolean
+          in: query
+          description: 'If true, response returns more details for each label in labels field: :name, :color, :description, :description_html, :text_color. Default is false.'
+        - name: with_merge_status_recheck
+          schema: 
+            type: boolean
+          in: query
+          description: If true, this projection requests (but does not guarantee) that the merge_status field be recalculated asynchronously. Default is false.
+        - name: created_after
+          schema: 
+            type: string
+            format: date-time
+          in: query
+          description: 'Return merge requests created on or after the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z)'
+        - name: created_before
+          schema:
+            type: string
+            format: date-time
+          in: query 
+          description: 'Return merge requests created on or before the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z)'
+        - name: updated_after
+          schema: 
+            type: string
+            format: date-time
+          in: query
+          description: 'Return merge requests updated on or after the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z)'
+        - name: updated_before
+          schema:
+            type: string
+            format: date-time
+          in: query
+          description: 'Return merge requests updated on or before the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z)'
+        - name: scope
+          schema: 
+            type: string
+          in: query 
+          description: 'Return merge requests for the given scope: created_by_me, assigned_to_me, or all.'
+        - name: author_id
+          schema:
+            type: integer
+          in: query
+          description: Returns merge requests created by the given user id. Mutually exclusive with author_username.
+        - name: author_username
+          schema: 
+            type: string
+          in: query
+          description: Returns merge requests created by the given username. Mutually exclusive with author_id.
+        - name: assignee_id
+          schema: 
+            type: integer
+          in: query
+          description: Returns merge requests assigned to the given user id. None returns unassigned merge requests. Any returns merge requests with an assignee.
+        - name: approver_ids
+          schema: 
+            type: array
+            items: 
+              type: integer
+          in: query
+          description: Returns merge requests which have specified all the users with the given ids as individual approvers. None returns merge requests without approvers. Any returns merge requests with an approver.
+        - name: approved_by_ids
+          schema: 
+            type: array
+            items: 
+              type: integer
+          in: query
+          description: "Returns merge requests which have been approved by all the users with the given ids (Max 5). None returns merge requests with no approvals. Any returns merge requests with an approval."
+        - name: reviewer_id
+          schema: 
+            type: integer
+          in: query
+          description: Returns merge requests which have the user as a reviewer with the given user id. None returns merge requests with no reviewers. Any returns merge requests with any reviewer. Mutually exclusive with reviewer_username.
+        - name: reviewer_username
+          schema: 
+            type: string
+          in: query
+          description: Returns merge requests which have the user as a reviewer with the given username. None returns merge requests with no reviewers. Any returns merge requests with any reviewer. Mutually exclusive with reviewer_id.
+        - name: my_reaction_emoji
+          schema: 
+            type: string
+          in: query
+          description: Return merge requests reacted by the authenticated user by the given emoji. None returns issues not given a reaction. Any returns issues given at least one reaction.
+        - name: source_branch
+          schema: 
+            type: string
+          in: query 
+          description: Return merge requests with the given source branch.
+        - name: target_branch
+          schema:
+            type: string
+          in: query
+          description: Return merge requests with the given target branch.
+        - name: search
+          schema: 
+            type: string
+          in: query 
+          description: Search merge requests against their title and description.
+        - name: wip
+          schema:
+            type: string 
+          in: query
+          description: "Filter merge requests against their wip status. yes to return only draft merge requests, no to return non-draft merge requests."
+        - name: not
+          schema:
+            type: string
+          in: query
+          description: "Return merge requests that do not match the parameters supplied. Accepts: labels, milestone, author_id, author_username, assignee_id, assignee_username, reviewer_id, reviewer_username, my_reaction_emoji."   
+
+      description: Fetch list of the merge requests for the project
+      responses:
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{id}/merge_requests/{merge_request_iid}/approve:
+    post:
+      tags: 
+        - 'Merge Requests'
+
+      parameters:
+        - name: id
+          schema: 
+            type: integer
+          in: path
+          required: true
+          description: project id
+        - name: merge_request_iid
+          schema:
+            type: integer
+          in: path
+          required: true
+          description: merge request internal id
+        - name: sha
+          schema: 
+            type: string
+          in: query
+          description: The HEAD of the MR 
+        - name: password
+          schema:
+            type: string
+          in: query
+          description: "Current user’s password. Required if Require user password to approve is enabled in the project settings."
+      description: Gives approval for the MR
+      responses:
+        '200':
+          description: Approve accepted
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitLabApproveMrResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+          
+  /projects/{id}/merge_requests/{merge_request_iid}/unapprove:
+    post:
+      tags: 
+        - 'Merge Requests'
+      parameters:
+        - name: id
+          schema: 
+            type: integer
+          in: path
+          required: true
+          description: project id
+        - name: merge_request_iid
+          schema:
+            type: integer
+          in: path
+          required: true
+          description: merge request internal id
+      description: Gives approval for the MR
+      responses:
+        '200':
+          description: Approve accepted
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitLabApproveMrResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+          
+  /projects/{id}/merge_requests/{merge_request_iid}/merge:
+    put:
+      tags: 
+        - 'Merge Requests'
+    
+      parameters:
+        - name: id
+          schema: 
+            type: integer
+          in: path
+          required: true
+          description: project id
+        - name: merge_request_iid
+          schema:
+            type: integer
+          in: path
+          required: true
+          description: merge request internal id
+        - name: merge_commit_message
+          schema: 
+            type: string
+          in: query
+          description: Custom merge commit message.
+        - name: squash_commit_message
+          schema:
+            type: string
+          in: query
+          description: Custom squash commit message.
+        - name: squash
+          schema: 
+            type: boolean
+          in: query
+          description: If true the commits are squashed into a single commit on merge.
+        - name: should_remove_source_branch
+          schema: 
+            type: boolean
+          in: query
+          description: If true removes the source branch.
+        - name: merge_when_pipeline_succeeds
+          schema: 
+            type: boolean
+          in: query
+          description: If true the MR is merged when the pipeline succeeds.
+        - name: sha
+          schema:
+            type: string
+          in: query
+          description: If present, then this SHA must match the HEAD of the source branch, otherwise the merge fails.           
+      description: Gives approval for the MR
+      responses:
+        '200':
+          description: MR accepted
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitLabMrMergeResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+                    
+components:
+  responses:
+    'NotFound':
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+            
+    'RequestLimitError':
+      description: Request limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+  schemas:
+    MessageResponse: 
+      type: object
+      properties:
+        message: 
+          type: string
+          example: 404 User with ID or username '123' Not Found
+    GitLabMrMergeResponse:
+      type: object
+      
+    GitLabApproveMrResponse:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 5
+        iid: 
+          type: integer
+          example: 5
+        project_id: 
+          type: integer
+          example: 1
+        title: 
+          type: string
+          example: "Approvals API"
+        description: 
+          type: string
+          example: Test
+        state: 
+          type: string
+          example: opened
+        created_at: 
+          type: string
+          format: date-time
+          example: "2016-06-08T00:19:52.638Z"
+        updated_at: 
+          type: string
+          format: date-time
+          example: "2016-06-09T21:32:14.105Z"
+        merge_status: 
+          type: string
+          example: can_be_merged
+        approvals_required: 
+          type: integer
+          example: 2
+        approvals_left: 
+          type: integer
+          example: 0
+        approved_by:
+          type: array
+          items:
+            type: object
+            properties:
+              user: 
+                type: object
+                properties:
+                  name: 
+                    type: string
+                    example: Administrator
+                  username:
+                    type: string
+                    example: root
+                  id:
+                    type: integer
+                    example: 1
+                  state: 
+                    type: string 
+                    example: active
+                  avatar_url: 
+                    type: string
+                    example: "http://www.gravatar.com/avatar/e64c7d89f26bd1972efa854d13d7dd61?s=80&d=identicon"
+                  web_url:
+                    type: string
+                    example: "http://localhost:3000/root"
+    GitLabProject:
+      type: object
+      properties:
+        id: 
+          type: integer
+          example: 4
+        description: 
+          type: string
+          example: null
+        default_branch:
+          type: string
+          example: master
+        visibility: 
+          type: string
+          example: private
+        ssh_url_to_repo: 
+          type: string
+          example: "git@example.com:diaspora/diaspora-client.git"
+        http_url_to_repo: 
+          type: string
+          example: "http://example.com/diaspora/diaspora-client.git"
+        web_url: 
+          type: string
+          example: "http://example.com/diaspora/diaspora-client"
+        readme_url: 
+          type: string
+          example: "http://example.com/diaspora/diaspora-client/blob/master/README.md"
+        tag_list:
+          type: array
+          items:
+            type: string
+          example: 
+           - example
+           - "disapora client"
+        owner:
+          type: object
+          properties:
+           id: 
+            type: string
+            example: 3
+           name: 
+            type: string
+            example: Diaspora
+           created_at:
+            type: string
+            example: "2013-09-30T13:46:02Z"
+        name:
+          type: string
+          example: "Diaspora Client"
+        name_with_namespace:
+          type: string
+          example: "Diaspora / Diaspora Client"
+        path:
+          type: string
+          example: "diaspora-client"
+        path_with_namespace:
+          type: string
+          example: "diaspora/diaspora-client"
+        issues_enabled: 
+          type: boolean 
+          example: true
+        open_issues_count:
+          type: integer
+          example: 1
+        merge_requests_enabled:
+          type: boolean
+          example: true
+        jobs_enabled:
+          type: boolean
+          example: true
+        wiki_enabled:
+          type: boolean
+          example: true
+        snippets_enabled:
+          type: boolean 
+          example: false
+        can_create_merge_request_in:
+          type: boolean
+          example: true
+        resolve_outdated_diff_discussions:
+          type: boolean
+          example: false
+        container_registry_enabled:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          example: "2013-09-30T13:46:02Z"
+        last_activity_at:
+          type: string
+          example: "2013-09-30T13:46:02Z"
+        creator_id: 
+          type: integer
+          example: 3
+        namespace:
+          type: object
+          properties:
+            id: 
+              type: integer
+              example: 3
+            name:
+              type: string
+              example: Diaspora
+            path: 
+              type: string
+              example: diaspora
+            kind: 
+              type: string
+              example: group
+            full_path: 
+              type: string
+              example: diaspora
+        import_status: 
+          type: string 
+          example: none
+        archived: 
+          type: boolean
+          example: false
+        avatar_url: 
+          type: string 
+          example: "http://example.com/uploads/project/avatar/4/uploads/avatar.png"
+        shared_runners_enabled: 
+          type: boolean 
+          example: true
+        forks_count:
+          type: integer
+          example: 0
+        star_count: 
+          type: integer
+          example: 0
+        runners_token: 
+          type: string
+          example: b8547b1dc37721d05889db52fa2f02
+        ci_default_git_depth: 
+          type: integer
+          example: 50
+        ci_forward_deployment_enabled: 
+          type: boolean 
+          example: true
+        public_jobs:
+          type: boolean
+          example: true
+        shared_with_groups:
+          type: array
+          items:
+            type: string
+        only_allow_merge_if_pipeline_succeeds:
+          type: boolean
+          example: false
+        allow_merge_on_skipped_pipeline: 
+          type: boolean 
+          example: false
+        restrict_user_defined_variables:
+          type: boolean
+          example: false
+        only_allow_merge_if_all_discussions_are_resolved:
+          type: boolean
+          example: false
+        remove_source_branch_after_merge:
+          type: boolean
+          example: false
+        request_access_enabled: 
+          type: boolean
+          example: false
+        merge_method: 
+          type: string 
+          example: merge
+        autoclose_referenced_issues:
+          type: boolean
+          example: true
+        suggestion_commit_message: 
+          type: string
+          example: null
+        marked_for_deletion_at: 
+          type: string
+          example: "2020-04-03"
+        marked_for_deletion_on: 
+          type: string
+          example: "2020-04-03"
+        statistics:
+          type: object
+          properties:
+            commit_count: 
+              type: integer
+              example: 37
+            storage_size: 
+              type: integer
+              example: 1038090
+            repository_size: 
+              type: integer
+              example: 1038090
+            wiki_size: 
+              type: integer
+              example: 0
+            lfs_objects_size: 
+              type: integer
+              example: 0
+            job_artifacts_size: 
+              type: integer
+              example: 0
+            packages_size: 
+              type: integer
+              example: 0
+            snippets_size: 
+              type: integer
+              example: 0
+        container_registry_image_prefix: 
+          type: string
+          example: "registry.example.com/diaspora/diaspora-client"
+        
+        _links:
+          type: object
+          properties:
+            self: 
+              type: string
+              format: url
+              example: "http://example.com/api/v4/projects"
+            issues:
+              type: string
+              format: url
+              example: "http://example.com/api/v4/projects/1/issues"
+            merge_requests:
+              type: string
+              format: url
+              example: "http://example.com/api/v4/projects/1/merge_requests"
+            repo_branches: 
+              type: string
+              format: url
+              example: "http://example.com/api/v4/projects/1/repository_branches"
+            labels: 
+              type: string
+              format: url
+              example: "http://example.com/api/v4/projects/1/labels"
+            events: 
+              type: string
+              format: url
+              example: "http://example.com/api/v4/projects/1/events"
+            members: 
+              type: string
+              format: url
+              example: "http://example.com/api/v4/projects/1/members"
